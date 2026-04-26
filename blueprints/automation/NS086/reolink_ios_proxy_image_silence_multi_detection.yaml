@@ -1,0 +1,239 @@
+blueprint:
+  name: Reolink Camera Alert (iOS, Proxy Image + Silence THIS/ALL) - Multi Detection
+  description: >
+    Reolink iOS alert with proxy image, cooldown, and actionable buttons.
+    Per automation instance, choose one camera plus one or more detection sensors
+    (person/vehicle/animal/etc) for that camera.
+  domain: automation
+  input:
+    camera_name:
+      name: Camera name
+      description: Friendly name used in notification title/messages
+      selector:
+        text:
+      default: Reolink Camera
+
+    camera:
+      name: Camera entity
+      selector:
+        entity:
+          domain: camera
+
+    detection_sensors:
+      name: Detection sensors for this camera
+      description: Select one or more binary sensors (person/vehicle/animal/etc)
+      selector:
+        entity:
+          domain: binary_sensor
+          multiple: true
+
+    notify_devices:
+      name: iOS devices to notify
+      selector:
+        device:
+          integration: mobile_app
+          multiple: true
+
+    base_url:
+      name: External HA base URL
+      description: Example https://haexternal.example.com
+      selector:
+        text:
+      default: ""
+
+    filename_stem:
+      name: Snapshot filename stem
+      description: Unique short name per camera, eg driveway, garage
+      selector:
+        text:
+      default: reolink
+
+    cooldown_seconds:
+      name: Cooldown seconds
+      description: Minimum seconds between alerts from this automation instance
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 1
+          mode: box
+      default: 60
+
+    enable_open_url_button:
+      name: Show Open URL button
+      selector:
+        boolean:
+      default: true
+
+    open_url_path:
+      name: Open URL path
+      description: Path opened when tapping Open (eg /lovelace-security)
+      selector:
+        text:
+      default: /lovelace-security
+
+    global_notifications_enabled:
+      name: Global camera notifications enabled helper (optional)
+      description: Optional input_boolean that must be on to send alerts
+      default: ""
+      selector:
+        entity:
+          domain: input_boolean
+
+    silence_this_boolean:
+      name: Silence THIS camera helper (optional)
+      description: Optional input_boolean turned on from action button
+      default: ""
+      selector:
+        entity:
+          domain: input_boolean
+
+    silence_all_boolean:
+      name: Silence ALL cameras helper (optional)
+      description: Optional input_boolean turned on from action button
+      default: ""
+      selector:
+        entity:
+          domain: input_boolean
+
+mode: single
+max_exceeded: silent
+
+variables:
+  i_camera_name: !input camera_name
+  i_camera: !input camera
+  i_detection_sensors: !input detection_sensors
+  i_notify_devices: !input notify_devices
+  i_base_url: !input base_url
+  i_filename_stem: !input filename_stem
+  i_cooldown_seconds: !input cooldown_seconds
+  i_enable_open_url_button: !input enable_open_url_button
+  i_open_url_path: !input open_url_path
+  i_global_notifications_enabled: !input global_notifications_enabled
+  i_silence_this_boolean: !input silence_this_boolean
+  i_silence_all_boolean: !input silence_all_boolean
+
+  slug: "{{ i_filename_stem | lower | regex_replace('[^a-z0-9_]+', '_') }}"
+  action_silence_this: "{{ 'REOLINK_SILENCE_THIS_' ~ slug }}"
+  action_silence_all: REOLINK_SILENCE_ALL
+  image_path: "{{ '/config/www/reolink_alerts/' ~ i_filename_stem ~ '.jpg' }}"
+  image_url: "{{ i_base_url ~ '/local/reolink_alerts/' ~ i_filename_stem ~ '.jpg?ts=' ~ (as_timestamp(now()) | int) }}"
+  cooldown_ok: >
+    {% if this.attributes.last_triggered is none %}
+      true
+    {% else %}
+      {{ (as_timestamp(now()) - as_timestamp(this.attributes.last_triggered)) > (i_cooldown_seconds | int(0)) }}
+    {% endif %}
+  triggered_sensor: "{{ trigger.entity_id if trigger.platform == 'state' else '' }}"
+  triggered_name: >
+    {% if trigger.platform == 'state' %}
+      {{ state_attr(trigger.entity_id, 'friendly_name') or trigger.entity_id }}
+    {% else %}
+      unknown
+    {% endif %}
+
+trigger:
+  - platform: state
+    entity_id: !input detection_sensors
+    to: "on"
+    id: detection
+
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: mobile_action
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: detection
+          - condition: template
+            value_template: "{{ cooldown_ok }}"
+          - condition: template
+            value_template: >
+              {% if i_global_notifications_enabled == '' %}
+                true
+              {% else %}
+                {{ is_state(i_global_notifications_enabled, 'on') }}
+              {% endif %}
+          - condition: template
+            value_template: >
+              {% if i_silence_all_boolean == '' %}
+                true
+              {% else %}
+                {{ is_state(i_silence_all_boolean, 'off') }}
+              {% endif %}
+          - condition: template
+            value_template: >
+              {% if i_silence_this_boolean == '' %}
+                true
+              {% else %}
+                {{ is_state(i_silence_this_boolean, 'off') }}
+              {% endif %}
+        sequence:
+          - action: camera.snapshot
+            target:
+              entity_id: !input camera
+            data:
+              filename: "{{ image_path }}"
+
+          - action: notify.notify
+            target:
+              device_id: !input notify_devices
+            data:
+              title: "{{ i_camera_name }} Alert"
+              message: "{{ triggered_name }} detected"
+              data:
+                image: "{{ image_url }}"
+                tag: "{{ 'reolink_' ~ slug }}"
+                group: "{{ 'reolink_' ~ slug }}"
+                actions: >
+                  {% set acts = [] %}
+                  {% if i_enable_open_url_button %}
+                    {% set acts = acts + [ {'action':'URI','title':'Open','uri': i_open_url_path } ] %}
+                  {% endif %}
+                  {% if i_silence_this_boolean != '' %}
+                    {% set acts = acts + [ {'action': action_silence_this, 'title':'Silence THIS'} ] %}
+                  {% endif %}
+                  {% if i_silence_all_boolean != '' %}
+                    {% set acts = acts + [ {'action': action_silence_all, 'title':'Silence ALL'} ] %}
+                  {% endif %}
+                  {{ acts }}
+
+      - conditions:
+          - condition: trigger
+            id: mobile_action
+          - condition: template
+            value_template: "{{ trigger.event.data.action == action_silence_this }}"
+          - condition: template
+            value_template: "{{ i_silence_this_boolean != '' }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: !input silence_this_boolean
+          - action: notify.notify
+            target:
+              device_id: !input notify_devices
+            data:
+              title: "{{ i_camera_name }}"
+              message: "Silenced THIS camera notifications."
+
+      - conditions:
+          - condition: trigger
+            id: mobile_action
+          - condition: template
+            value_template: "{{ trigger.event.data.action == action_silence_all }}"
+          - condition: template
+            value_template: "{{ i_silence_all_boolean != '' }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: !input silence_all_boolean
+          - action: notify.notify
+            target:
+              device_id: !input notify_devices
+            data:
+              title: "{{ i_camera_name }}"
+              message: "Silenced ALL camera notifications."
