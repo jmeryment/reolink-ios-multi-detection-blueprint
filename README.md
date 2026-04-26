@@ -7,6 +7,7 @@ Home Assistant blueprint for Reolink notifications to iOS devices with:
 - Optional global notification gating helper
 - Optional Silence THIS / Silence ALL actions
 - Snapshot image attachments that work with iOS notifications
+- Restored upstream NS086-style advanced options (quiet hours, presence filter, iOS sound/live view, custom message/title, silence timing)
 
 This README is written so someone can set this up from scratch without guesswork.
 
@@ -157,9 +158,46 @@ If both are provided, the blueprint uses `notify_service`.
 
 - `enable_open_url_button`: Show Open action in notification
 - `open_url_path`: Path opened by the Open action
+- `open_url_title`: Label text for the Open action button
+- `show_silence_this_button`: Show/hide Silence THIS action
+- `show_silence_all_button`: Show/hide Silence ALL action
+- `silence_minutes`: Timed silence duration used by action labels and timer fallback mode
+- `automations_to_silence`: Optional automation list used for timed Silence ALL fallback mode
+- `presence_filter_enabled`: Enables additional presence filter logic (independent of away-only split)
+- `presence_entities`: Presence entities used by additional presence filter
+- `disable_hours`: Quiet-hour list (0-23) to suppress notifications
+- `ios_live_view_entity`: Optional iOS live view camera entity
+- `ios_sound_name`: iOS sound name (for example `default` or `none`)
+- `ios_sound_volume`: iOS sound volume 0-100
+- `ios_critical`: Mark notification as iOS critical alert
 - `global_notifications_enabled`: Optional global on/off helper gate
 - `silence_this_boolean`: Optional helper toggled by Silence THIS
 - `silence_all_boolean`: Optional helper toggled by Silence ALL
+
+## Source parity and custom extensions
+
+Compared to the upstream source blueprint (`NS086/HomeAssistantBlueprints` `IOSAlpha`), this repo now includes the richer option set while retaining custom behavior added here.
+
+Restored upstream-style capabilities:
+
+- custom title/message templates
+- optional Open URL label
+- quiet hours
+- additional presence filter entities
+- iOS live view + sound + critical settings
+- timed silence controls (`silence_minutes`, `automations_to_silence`)
+
+Custom behavior retained in this repo:
+
+- always-on vs away-only detection sensor split
+- away-only presence gate via `presence_boolean`
+- optional `notify_service` routing (recommended)
+- helper-driven silence toggles per camera and per-person global (`silence_this_boolean` / `silence_all_boolean`)
+
+Silence behavior summary:
+
+- If silence helpers are configured, Silence actions toggle those helpers.
+- If silence helpers are blank, Silence actions can still use timed automation disable/re-enable fallback using `silence_minutes` and `automations_to_silence`.
 
 ## Recommended automation design
 
@@ -229,8 +267,22 @@ Assumptions:
 - `notify_devices`: leave empty when `notify_service` is set
 - `cooldown_seconds`: `60`
 - `enable_open_url_button`: `true`
-- `silence_this_boolean`: leave empty unless you use a per-camera silence helper
-- `silence_all_boolean`: leave empty unless you use a global silence helper
+- `open_url_title`: `Open URL`
+- `show_silence_this_button`: `true`
+- `show_silence_all_button`: `true`
+- `silence_minutes`: `30`
+- `presence_filter_enabled`: `false` (enable only if you also set `presence_entities`)
+- `disable_hours`: empty
+- `ios_sound_name`: `default`
+- `ios_sound_volume`: `100`
+- `ios_critical`: `false`
+
+If you are using the helper-based silence model configured in this repo, set:
+
+- Justin camera helper: `silence_this_boolean = input_boolean.reolink_silence_<camera>_justin`
+- Justin global helper: `silence_all_boolean = input_boolean.reolink_silence_all_justin`
+- Candice camera helper: `silence_this_boolean = input_boolean.reolink_silence_<camera>_candice`
+- Candice global helper: `silence_all_boolean = input_boolean.reolink_silence_all_candice`
 
 ## Troubleshooting
 
