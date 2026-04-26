@@ -28,11 +28,20 @@ blueprint:
           multiple: true
 
     notify_devices:
-      name: iOS devices to notify
+      name: iOS devices to notify (optional)
+      description: Used when no notify service is provided
+      default: []
       selector:
         device:
           integration: mobile_app
           multiple: true
+
+    notify_service:
+      name: Notify service (optional)
+      description: Example notify.justin_mobile_devices; if set, this is used instead of device targets
+      default: ""
+      selector:
+        text:
 
     base_url:
       name: External HA base URL
@@ -104,6 +113,7 @@ variables:
   i_camera: !input camera
   i_detection_sensors: !input detection_sensors
   i_notify_devices: !input notify_devices
+  i_notify_service: !input notify_service
   i_base_url: !input base_url
   i_filename_stem: !input filename_stem
   i_cooldown_seconds: !input cooldown_seconds
@@ -112,6 +122,8 @@ variables:
   i_global_notifications_enabled: !input global_notifications_enabled
   i_silence_this_boolean: !input silence_this_boolean
   i_silence_all_boolean: !input silence_all_boolean
+
+  has_notify_devices: "{{ (i_notify_devices | default([], true) | list | count) > 0 }}"
 
   slug: "{{ i_filename_stem | lower | regex_replace('[^a-z0-9_]+', '_') }}"
   action_silence_this: "{{ 'REOLINK_SILENCE_THIS_' ~ slug }}"
@@ -179,28 +191,58 @@ action:
             data:
               filename: "{{ image_path }}"
 
-          - action: notify.notify
-            target:
-              device_id: !input notify_devices
-            data:
-              title: "{{ i_camera_name }} Alert"
-              message: "{{ triggered_name }} detected"
-              data:
-                image: "{{ image_url }}"
-                tag: "{{ 'reolink_' ~ slug }}"
-                group: "{{ 'reolink_' ~ slug }}"
-                actions: >
-                  {% set acts = [] %}
-                  {% if i_enable_open_url_button %}
-                    {% set acts = acts + [ {'action':'URI','title':'Open','uri': i_open_url_path } ] %}
-                  {% endif %}
-                  {% if i_silence_this_boolean != '' %}
-                    {% set acts = acts + [ {'action': action_silence_this, 'title':'Silence THIS'} ] %}
-                  {% endif %}
-                  {% if i_silence_all_boolean != '' %}
-                    {% set acts = acts + [ {'action': action_silence_all, 'title':'Silence ALL'} ] %}
-                  {% endif %}
-                  {{ acts }}
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ i_notify_service != '' }}"
+                sequence:
+                  - action: !input notify_service
+                    data:
+                      title: "{{ i_camera_name }} Alert"
+                      message: "{{ triggered_name }} detected"
+                      data:
+                        image: "{{ image_url }}"
+                        tag: "{{ 'reolink_' ~ slug }}"
+                        group: "{{ 'reolink_' ~ slug }}"
+                        actions: >
+                          {% set acts = [] %}
+                          {% if i_enable_open_url_button %}
+                            {% set acts = acts + [ {'action':'URI','title':'Open','uri': i_open_url_path } ] %}
+                          {% endif %}
+                          {% if i_silence_this_boolean != '' %}
+                            {% set acts = acts + [ {'action': action_silence_this, 'title':'Silence THIS'} ] %}
+                          {% endif %}
+                          {% if i_silence_all_boolean != '' %}
+                            {% set acts = acts + [ {'action': action_silence_all, 'title':'Silence ALL'} ] %}
+                          {% endif %}
+                          {{ acts }}
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ has_notify_devices }}"
+                sequence:
+                  - action: notify.notify
+                    target:
+                      device_id: !input notify_devices
+                    data:
+                      title: "{{ i_camera_name }} Alert"
+                      message: "{{ triggered_name }} detected"
+                      data:
+                        image: "{{ image_url }}"
+                        tag: "{{ 'reolink_' ~ slug }}"
+                        group: "{{ 'reolink_' ~ slug }}"
+                        actions: >
+                          {% set acts = [] %}
+                          {% if i_enable_open_url_button %}
+                            {% set acts = acts + [ {'action':'URI','title':'Open','uri': i_open_url_path } ] %}
+                          {% endif %}
+                          {% if i_silence_this_boolean != '' %}
+                            {% set acts = acts + [ {'action': action_silence_this, 'title':'Silence THIS'} ] %}
+                          {% endif %}
+                          {% if i_silence_all_boolean != '' %}
+                            {% set acts = acts + [ {'action': action_silence_all, 'title':'Silence ALL'} ] %}
+                          {% endif %}
+                          {{ acts }}
 
       - conditions:
           - condition: trigger
@@ -213,12 +255,26 @@ action:
           - action: input_boolean.turn_on
             target:
               entity_id: !input silence_this_boolean
-          - action: notify.notify
-            target:
-              device_id: !input notify_devices
-            data:
-              title: "{{ i_camera_name }}"
-              message: "Silenced THIS camera notifications."
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ i_notify_service != '' }}"
+                sequence:
+                  - action: !input notify_service
+                    data:
+                      title: "{{ i_camera_name }}"
+                      message: "Silenced THIS camera notifications."
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ has_notify_devices }}"
+                sequence:
+                  - action: notify.notify
+                    target:
+                      device_id: !input notify_devices
+                    data:
+                      title: "{{ i_camera_name }}"
+                      message: "Silenced THIS camera notifications."
 
       - conditions:
           - condition: trigger
@@ -231,9 +287,23 @@ action:
           - action: input_boolean.turn_on
             target:
               entity_id: !input silence_all_boolean
-          - action: notify.notify
-            target:
-              device_id: !input notify_devices
-            data:
-              title: "{{ i_camera_name }}"
-              message: "Silenced ALL camera notifications."
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ i_notify_service != '' }}"
+                sequence:
+                  - action: !input notify_service
+                    data:
+                      title: "{{ i_camera_name }}"
+                      message: "Silenced ALL camera notifications."
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ has_notify_devices }}"
+                sequence:
+                  - action: notify.notify
+                    target:
+                      device_id: !input notify_devices
+                    data:
+                      title: "{{ i_camera_name }}"
+                      message: "Silenced ALL camera notifications."
