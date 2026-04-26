@@ -1,4 +1,4 @@
-# Reolink iOS Multi-Detection Blueprint
+# Reolink iOS Detection Selector Blueprint
 
 Home Assistant automation blueprint for Reolink camera alerts with:
 
@@ -6,6 +6,16 @@ Home Assistant automation blueprint for Reolink camera alerts with:
 - Per-camera detection selection (person, vehicle, animal, etc)
 - Cooldown control
 - Optional "Silence THIS" and "Silence ALL" actions
+
+## Credits
+
+This blueprint is based on the original blueprint by `NS086`:
+
+- Original blueprint path: `NS086/IOSAlpha.yaml`
+
+This repository is a community derivative that extends the original with per-camera multi-detection sensor selection.
+
+Please keep attribution to the original creator when redistributing derivative versions.
 
 ## Blueprint file
 

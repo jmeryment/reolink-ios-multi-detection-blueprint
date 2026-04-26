@@ -1,5 +1,5 @@
 blueprint:
-  name: Reolink Camera Alert (iOS, Proxy Image + Silence THIS/ALL) - Multi Detection
+  name: Reolink Camera Alert (iOS, Proxy Image + Silence THIS/ALL) - Detection Selector
   description: >
     Reolink iOS alert with proxy image, cooldown, and actionable buttons.
     Per automation instance, choose one camera plus one or more detection sensors
