@@ -86,7 +86,6 @@ These requirements combine this repo's behavior with the original iOS guidance:
 - Optional helper booleans:
 	- presence helper (example `input_boolean.me_present`)
 	- global notification helper per recipient (example `input_boolean.cameranotificationsjustin`)
-	- silence helpers if you want actionable snooze-like behavior
 
 ## Critical iOS image setup (do not skip)
 
@@ -171,8 +170,6 @@ If both are provided, the blueprint uses `notify_service`.
 - `ios_sound_volume`: iOS sound volume 0-100
 - `ios_critical`: Mark notification as iOS critical alert
 - `global_notifications_enabled`: Optional global on/off helper gate
-- `silence_this_boolean`: Optional helper toggled by Silence THIS
-- `silence_all_boolean`: Optional helper toggled by Silence ALL
 
 ## Source parity and custom extensions
 
@@ -192,12 +189,13 @@ Custom behavior retained in this repo:
 - always-on vs away-only detection sensor split
 - away-only presence gate via `presence_boolean`
 - optional `notify_service` routing (recommended)
-- helper-driven silence toggles per camera and per-person global (`silence_this_boolean` / `silence_all_boolean`)
+- timed Silence THIS / Silence ALL actions without extra helper entities
 
 Silence behavior summary:
 
-- If silence helpers are configured, Silence actions toggle those helpers.
-- If silence helpers are blank, Silence actions can still use timed automation disable/re-enable fallback using `silence_minutes` and `automations_to_silence`.
+- Silence THIS disables the current automation for `silence_minutes`, then re-enables it.
+- Silence ALL disables the current automation plus any entries in `automations_to_silence` for `silence_minutes`, then re-enables them.
+- No timer helper input is required. The blueprint handles timed silence internally with a delay.
 
 ## Recommended automation design
 
