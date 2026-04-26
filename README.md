@@ -42,4 +42,4 @@ Create one automation per camera using this blueprint, and for each camera choos
 - The camera entity
 - One or more detection sensors for that camera
 - Either a notify service (recommended for groups, eg `notify.justin_mobile_devices`) or mobile app notify devices
-- Optional helper booleans for silence behavior
+- Optional helper booleans for silence behavior; these can be left blank if you do not want silence actions

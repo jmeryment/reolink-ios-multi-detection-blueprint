@@ -254,7 +254,7 @@ action:
         sequence:
           - action: input_boolean.turn_on
             target:
-              entity_id: !input silence_this_boolean
+              entity_id: "{{ i_silence_this_boolean }}"
           - choose:
               - conditions:
                   - condition: template
@@ -286,7 +286,7 @@ action:
         sequence:
           - action: input_boolean.turn_on
             target:
-              entity_id: !input silence_all_boolean
+              entity_id: "{{ i_silence_all_boolean }}"
           - choose:
               - conditions:
                   - condition: template
