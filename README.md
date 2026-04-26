@@ -15,6 +15,8 @@ This README is written so someone can set this up from scratch without guesswork
 Use this checklist to confirm a first-time setup quickly.
 
 1. Import blueprint
+	- One-click import:
+	  [![Open your Home Assistant instance and import this blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fjmeryment%2Freolink-ios-multi-detection-blueprint%2Fmain%2Fblueprints%2Fautomation%2Fjmeryment%2Freolink_ios_detection_selector.yaml)
 	- Open **Settings -> Automations & Scenes -> Blueprints -> Import Blueprint**
 	- Import from:
 	  `https://raw.githubusercontent.com/jmeryment/reolink-ios-multi-detection-blueprint/main/blueprints/automation/jmeryment/reolink_ios_detection_selector.yaml`
@@ -59,6 +61,8 @@ This derivative keeps the iOS notification reliability concepts and extends them
 - `blueprints/automation/jmeryment/reolink_ios_detection_selector.yaml`
 
 ## Import into Home Assistant
+
+[![Open your Home Assistant instance and import this blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fjmeryment%2Freolink-ios-multi-detection-blueprint%2Fmain%2Fblueprints%2Fautomation%2Fjmeryment%2Freolink_ios_detection_selector.yaml)
 
 Use this raw URL:
 
