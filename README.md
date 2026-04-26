@@ -9,7 +9,7 @@ Home Assistant automation blueprint for Reolink camera alerts with:
 
 ## Credits
 
-This blueprint is based on the original blueprint by `NS086`:
+This blueprint is based on the original blueprint by [NS086](https://github.com/NS086):
 
 - Original blueprint path: `NS086/IOSAlpha.yaml`
 
@@ -19,15 +19,15 @@ Please keep attribution to the original creator when redistributing derivative v
 
 ## Blueprint file
 
-- `blueprints/automation/NS086/reolink_ios_proxy_image_silence_multi_detection.yaml`
+- `blueprints/automation/jmeryment/reolink_ios_detection_selector.yaml`
 
 ## Import into Home Assistant
 
-After pushing this repo to GitHub, import using the raw URL from your default branch.
+Import using the raw URL from the default branch:
 
 Example:
 
-`https://raw.githubusercontent.com/<your-user>/<your-repo>/main/blueprints/automation/NS086/reolink_ios_proxy_image_silence_multi_detection.yaml`
+`https://raw.githubusercontent.com/jmeryment/reolink-ios-multi-detection-blueprint/main/blueprints/automation/jmeryment/reolink_ios_detection_selector.yaml`
 
 In Home Assistant:
 
