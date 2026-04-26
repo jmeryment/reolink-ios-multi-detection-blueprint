@@ -10,6 +10,41 @@ Home Assistant blueprint for Reolink notifications to iOS devices with:
 
 This README is written so someone can set this up from scratch without guesswork.
 
+## 5-minute quick start checklist
+
+Use this checklist to confirm a first-time setup quickly.
+
+1. Import blueprint
+	- Open **Settings -> Automations & Scenes -> Blueprints -> Import Blueprint**
+	- Import from:
+	  `https://raw.githubusercontent.com/jmeryment/reolink-ios-multi-detection-blueprint/main/blueprints/automation/jmeryment/reolink_ios_detection_selector.yaml`
+
+2. Create snapshot directory
+	- Ensure `/config/www/reolink_alerts` exists
+	- Example command: `mkdir -p /config/www/reolink_alerts`
+
+3. Create one test automation (one camera, one recipient)
+	- Set `camera` and at least one detection sensor
+	- Set `notify_service` (recommended)
+	- Set `base_url` to your externally reachable HA URL
+	- Set unique `filename_stem` (example `driveway_justin`)
+
+4. Enable global helper (if used)
+	- If `global_notifications_enabled` is set, ensure it is `on`
+	- Example: `input_boolean.cameranotificationsjustin = on`
+
+5. Trigger and validate
+	- Trigger a real detection (or temporarily force sensor `on`)
+	- Confirm notification arrives on iPhone
+	- Confirm image URL loads in Safari:
+	  `<base_url>/local/reolink_alerts/<filename_stem>.jpg`
+
+6. Scale out
+	- Repeat with one automation per camera per recipient
+	- Copy values from the **Copy-ready example values** section below
+
+If step 5 fails, go to the **Troubleshooting** section.
+
 ## Credits and lineage
 
 This project is a derivative of NS086's iOS Reolink blueprint work:
