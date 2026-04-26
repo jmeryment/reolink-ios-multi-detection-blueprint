@@ -45,7 +45,7 @@ blueprint:
           domain: input_boolean
 
     notify_devices:
-      name: iOS devices to notify (optional)
+      name: iPhones/iPads to notify (mobile_app, optional)
       description: Used when no notify service is provided
       default: []
       selector:
@@ -61,8 +61,10 @@ blueprint:
         text:
 
     base_url:
-      name: External HA base URL
-      description: Example https://haexternal.example.com
+      name: External Base URL (required for iOS attachments)
+      description: >
+        Full URL to your Home Assistant (e.g., https://ha.example.com).
+        Must be reachable from the phone (Wi-Fi & cellular). Nabu Casa URL works.
       selector:
         text:
       default: ""
@@ -83,15 +85,15 @@ blueprint:
         text:
 
     filename_stem:
-      name: Snapshot filename stem
-      description: Unique short name per camera, eg driveway, garage
+      name: Snapshot filename stem (no extension)
+      description: Unique short name per camera, e.g. driveway, garage
       selector:
         text:
       default: reolink
 
     cooldown_seconds:
-      name: Cooldown seconds
-      description: Minimum seconds between alerts from this automation instance
+      name: Cooldown (seconds, optional)
+      description: Minimum seconds between alerts from this automation instance. Set to 0 to disable.
       selector:
         number:
           min: 0
@@ -101,7 +103,7 @@ blueprint:
       default: 60
 
     enable_open_url_button:
-      name: Show Open URL button
+      name: Show "Open URL" button
       selector:
         boolean:
       default: true
@@ -120,13 +122,14 @@ blueprint:
         text:
 
     show_silence_this_button:
-      name: Show Silence THIS button
+      name: Show "Silence this camera" button
       default: true
       selector:
         boolean:
 
     show_silence_all_button:
-      name: Show Silence ALL button
+      name: Show "Silence ALL selected automations" button
+      description: Uses the list below; includes this automation too.
       default: true
       selector:
         boolean:
@@ -142,7 +145,7 @@ blueprint:
           mode: box
 
     automations_to_silence:
-      name: Other automations to silence for Silence ALL (optional)
+      name: Other automations to silence (optional)
       default: []
       selector:
         entity:
@@ -150,14 +153,14 @@ blueprint:
           multiple: true
 
     presence_filter_enabled:
-      name: Enable additional presence filter
+      name: Enable presence filter
       default: false
       selector:
         boolean:
 
     presence_entities:
-      name: Presence entities for additional filter (optional)
-      description: Only notify if all selected entities are NOT home
+      name: Presence entities (people/device trackers/groups)
+      description: Only notify if ALL of these are NOT home.
       default: []
       selector:
         entity:
@@ -169,7 +172,7 @@ blueprint:
               - group
 
     disable_hours:
-      name: Quiet hours (0-23, optional)
+      name: Quiet hours (0–23, optional)
       default: []
       selector:
         select:
@@ -202,6 +205,7 @@ blueprint:
 
     ios_live_view_entity:
       name: iOS Live View entity (optional)
+      description: Attach live view from this entity in iOS notifications.
       default: ""
       selector:
         entity:
@@ -212,7 +216,7 @@ blueprint:
 
     ios_sound_name:
       name: iOS Sound name
-      description: Use default for iOS default sound, or none for silent
+      description: Use "default" for default sound, or "none" for no sound.
       default: default
       selector:
         select:
@@ -222,7 +226,7 @@ blueprint:
           custom_value: true
 
     ios_sound_volume:
-      name: iOS Sound volume (0-100)
+      name: iOS Sound volume (0–100)
       default: 100
       selector:
         number:
@@ -232,7 +236,7 @@ blueprint:
           mode: slider
 
     ios_critical:
-      name: iOS Critical alert
+      name: iOS Critical alert (bypass mute/DND)
       default: false
       selector:
         boolean:
