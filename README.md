@@ -3,7 +3,7 @@
 Home Assistant automation blueprint for Reolink camera alerts with:
 
 - Proxy image snapshots for iOS notifications
-- Per-camera detection selection (person, vehicle, animal, etc)
+- Per-camera detection selection split into always-on and away-only sensors
 - Cooldown control
 - Optional "Silence THIS" and "Silence ALL" actions
 
@@ -40,6 +40,18 @@ In Home Assistant:
 Create one automation per camera using this blueprint, and for each camera choose:
 
 - The camera entity
-- One or more detection sensors for that camera
+- One or more always-on detection sensors for that camera
+- Optional away-only detection sensors for that camera
+- Optional presence helper, for example `input_boolean.me_present`, if you want away-only detections
 - Either a notify service (recommended for groups, eg `notify.justin_mobile_devices`) or mobile app notify devices
 - Optional helper booleans for silence behavior; these can be left blank if you do not want silence actions
+
+## Presence-aware pattern
+
+This blueprint can support a single automation per camera and recipient while still splitting notification behavior:
+
+- Put sensors like driveway vehicle into the always-on list
+- Put sensors like person or animal into the away-only list
+- Set `presence_boolean` to a helper that is `on` when the person is home, such as `input_boolean.me_present`
+
+Away-only sensors will only notify when that helper is `off`.

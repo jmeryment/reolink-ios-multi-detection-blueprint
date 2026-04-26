@@ -20,12 +20,29 @@ blueprint:
           domain: camera
 
     detection_sensors:
-      name: Detection sensors for this camera
-      description: Select one or more binary sensors (person/vehicle/animal/etc)
+      name: Always-on detection sensors for this camera
+      description: Select binary sensors that should notify regardless of whether you are home or away
       selector:
         entity:
           domain: binary_sensor
           multiple: true
+
+    away_only_detection_sensors:
+      name: Away-only detection sensors (optional)
+      description: Select binary sensors that should only notify when the presence helper is off
+      default: []
+      selector:
+        entity:
+          domain: binary_sensor
+          multiple: true
+
+    presence_boolean:
+      name: Presence helper for away-only detections (optional)
+      description: Input boolean that is on when you are home; away-only detections notify only when this helper is off
+      default: ""
+      selector:
+        entity:
+          domain: input_boolean
 
     notify_devices:
       name: iOS devices to notify (optional)
@@ -112,6 +129,8 @@ variables:
   i_camera_name: !input camera_name
   i_camera: !input camera
   i_detection_sensors: !input detection_sensors
+  i_away_only_detection_sensors: !input away_only_detection_sensors
+  i_presence_boolean: !input presence_boolean
   i_notify_devices: !input notify_devices
   i_notify_service: !input notify_service
   i_base_url: !input base_url
@@ -124,6 +143,17 @@ variables:
   i_silence_all_boolean: !input silence_all_boolean
 
   has_notify_devices: "{{ (i_notify_devices | default([], true) | list | count) > 0 }}"
+  triggered_is_away_only: "{{ trigger.entity_id in (i_away_only_detection_sensors | default([], true) | list) if trigger.platform == 'state' else false }}"
+  presence_allows_notification: >
+    {% if trigger.platform != 'state' %}
+      true
+    {% elif not triggered_is_away_only %}
+      true
+    {% elif i_presence_boolean == '' %}
+      false
+    {% else %}
+      {{ is_state(i_presence_boolean, 'off') }}
+    {% endif %}
 
   slug: "{{ i_filename_stem | lower | regex_replace('[^a-z0-9_]+', '_') }}"
   action_silence_this: "{{ 'REOLINK_SILENCE_THIS_' ~ slug }}"
@@ -148,7 +178,12 @@ trigger:
   - platform: state
     entity_id: !input detection_sensors
     to: "on"
-    id: detection
+    id: always_detection
+
+  - platform: state
+    entity_id: !input away_only_detection_sensors
+    to: "on"
+    id: away_detection
 
   - platform: event
     event_type: mobile_app_notification_action
@@ -159,10 +194,12 @@ condition: []
 action:
   - choose:
       - conditions:
-          - condition: trigger
-            id: detection
+          - condition: template
+            value_template: "{{ trigger.id in ['always_detection', 'away_detection'] }}"
           - condition: template
             value_template: "{{ cooldown_ok }}"
+          - condition: template
+            value_template: "{{ presence_allows_notification }}"
           - condition: template
             value_template: >
               {% if i_global_notifications_enabled == '' %}
